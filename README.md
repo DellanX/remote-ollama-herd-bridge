@@ -1,21 +1,35 @@
 # Vast Herd Node
 
-A lightweight Docker image that combines **Ollama** and **Ollama Herd Node**, making it easy to add GPUs to an existing Ollama Herd cluster.
+A lightweight Docker image that combines **Ollama** and **Ollama Herd Node** to easily add local or cloud GPUs to an existing Ollama Herd cluster.
 
-This image was originally created for use with Vast.ai default jobs, but can run anywhere Docker is available.
+Originally created for **Vast.ai Default Jobs**, this image can run anywhere Docker and GPU acceleration are available.
+
+---
 
 ## Features
 
-- Runs Ollama with GPU acceleration
-- Starts an Ollama Herd node automatically
-- Supports explicit router configuration via environment variable
-- Falls back to automatic mDNS router discovery when no router URL is provided
-- Minimal configuration required
-- Suitable for Vast.ai default jobs, homelabs, and dedicated inference nodes
+- GPU-accelerated Ollama server
+- Automatic Ollama Herd node startup
+- Explicit router configuration via CLI arguments
+- Environment variable configuration support
+- Automatic mDNS router discovery fallback
+- Startup diagnostics and connectivity testing
+- Designed for Vast.ai Default Jobs, homelabs, and dedicated inference nodes
+
+---
 
 ## Quick Start
 
-### Connect to a specific Herd router
+### Connect to a Specific Router (CLI Argument)
+
+```bash
+docker run --rm \
+  --gpus all \
+  ghcr.io/dellanx/vast-herd-node:latest \
+  --router-url http://192.168.0.79:11435
+```
+
+### Connect to a Specific Router (Environment Variable)
 
 ```bash
 docker run --rm \
@@ -24,7 +38,7 @@ docker run --rm \
   ghcr.io/dellanx/vast-herd-node:latest
 ```
 
-### Use automatic mDNS discovery
+### Use Automatic mDNS Discovery
 
 ```bash
 docker run --rm \
@@ -32,54 +46,148 @@ docker run --rm \
   ghcr.io/dellanx/vast-herd-node:latest
 ```
 
-## Environment Variables
+When no router URL is specified, the container falls back to Ollama Herd's built-in mDNS discovery mechanism.
 
-| Variable | Description | Default |
-|-----------|------------|---------|
-| `HERD_ROUTER_URL` | Explicit Ollama Herd router URL | mDNS discovery |
-| `OLLAMA_HOST` | Address Ollama binds to | `0.0.0.0:11434` |
-
-## How It Works
-
-1. Starts the local Ollama service.
-2. Waits for Ollama to become available.
-3. Starts `herd-node`.
-4. Connects to the configured router or discovers one via mDNS.
-5. Makes the local GPU available to the Herd cluster.
+---
 
 ## Vast.ai Default Job Example
 
-This image is particularly useful as a Vast.ai default job:
+A common use case is automatically contributing idle GPUs to an Ollama Herd cluster.
 
-- GPU sits idle
-- Default job starts automatically
-- Node joins Herd cluster
-- Inference workloads are routed to the GPU
-- Default job is paused automatically when a customer rents the machine
-- Default job resumes when the GPU becomes idle again
+Example:
 
-## Logs
+```bash
+vastai set defjob <machine-id> \
+  --image ghcr.io/dellanx/vast-herd-node:latest \
+  --price_gpu 0.01 \
+  --args "--router-url http://192.168.0.79:11435"
+```
 
-The container prints startup diagnostics including:
+Workflow:
+
+1. GPU becomes idle.
+2. Vast.ai launches the default job.
+3. Ollama starts.
+4. Herd Node joins the cluster.
+5. Inference requests are routed to the idle GPU.
+6. The job is paused automatically when a customer rents the machine.
+7. The job resumes when the machine becomes idle again.
+
+---
+
+## Supported Configuration
+
+### CLI Arguments
+
+| Argument | Description |
+|-----------|------------|
+| `--router-url` | Explicit Herd router address |
+
+Example:
+
+```bash
+docker run ghcr.io/dellanx/vast-herd-node:latest \
+  --router-url http://192.168.0.79:11435
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|-----------|------------|---------|
+| `HERD_ROUTER_URL` | Explicit Herd router URL | mDNS discovery |
+| `OLLAMA_HOST` | Address Ollama binds to | `0.0.0.0:11434` |
+
+CLI arguments take precedence over environment variables.
+
+---
+
+## How It Works
+
+At startup the container:
+
+1. Starts the local Ollama service.
+2. Performs basic startup diagnostics.
+3. Waits for Ollama to become available.
+4. Determines the router URL from:
+   - `--router-url`
+   - `HERD_ROUTER_URL`
+   - mDNS discovery
+5. Launches `herd-node`.
+6. Registers with the Herd router.
+7. Makes local GPU resources available to the cluster.
+
+---
+
+## Diagnostics
+
+Startup logs include information that can help troubleshoot networking and cluster registration:
 
 - Ollama startup status
 - Herd node startup status
 - Router connectivity checks
-- Network information useful for troubleshooting
+- Environment configuration
+- Network diagnostics
+
+To view logs:
+
+```bash
+docker logs <container>
+```
+
+---
 
 ## Security
 
-This image contains no built-in VPN configuration, credentials, or authentication material.
+This image contains:
 
-If your Herd router is not publicly reachable, use a secure networking solution such as:
+- No VPN configuration
+- No embedded credentials
+- No authentication tokens
+- No network secrets
+
+Any networking or authentication requirements should be provided at deployment time.
+
+Common deployment approaches include:
 
 - Tailscale
 - WireGuard
-- Site-to-site VPN
-- Private networking infrastructure
+- Site-to-site VPNs
+- Private cloud networking
 
-Credentials should be injected at deployment time and not baked into the image.
+Never bake sensitive credentials into a public container image.
+
+---
+
+## Use Cases
+
+### Vast.ai Default Jobs
+
+Automatically contribute idle GPUs to a Herd cluster.
+
+### Homelab GPU Pooling
+
+Aggregate multiple desktop, server, and laptop GPUs into a single Herd deployment.
+
+### Dedicated Inference Workers
+
+Run dedicated cloud inference workers that automatically join an existing Herd cluster.
+
+### Hybrid Clusters
+
+Combine local GPUs and cloud GPUs behind a single Herd router.
+
+---
+
+## Related Projects
+
+- Ollama
+- Ollama Herd
+- Vast.ai
+
+---
 
 ## License
 
-This project is provided as-is and relies on the upstream Ollama and Ollama Herd projects.
+This project is provided as-is and depends on the upstream Ollama and Ollama Herd projects.
+
+Please refer to their respective licenses and documentation for details.
