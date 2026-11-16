@@ -44,7 +44,11 @@ echo "========================================"
 if [ -n "${TS_AUTHKEY:-}" ]; then
     echo "Starting Tailscale..."
 
-    tailscaled --state=/tmp/tailscaled.state &
+    tailscaled \
+    --tun=userspace-networking \
+    --socks5-server=localhost:1055 \
+    --outbound-http-proxy-listen=localhost:1055 \
+    --state=/tmp/tailscaled.state &
     TAILSCALED_PID=$!
 
     sleep 10
