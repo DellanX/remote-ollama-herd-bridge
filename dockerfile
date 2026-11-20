@@ -1,4 +1,4 @@
-FROM vastai/base-image:latest
+FROM vastai/base-image:cuda-13.4.2-auto
 
 ENV OLLAMA_HOST=0.0.0.0:11434
 
