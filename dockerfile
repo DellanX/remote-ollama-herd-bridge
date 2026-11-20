@@ -1,23 +1,9 @@
-FROM ollama/ollama:latest
+FROM vastai/base-image:latest
 
-RUN apt-get update && \
-    apt-get install -y \
-        python3 \
-        python3-pip \
-        curl \
-        gnupg \
-        lsb-release
+ENV OLLAMA_HOST=0.0.0.0:11434
 
-RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg \
-    | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null && \
-    curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list \
-    | tee /etc/apt/sources.list.d/tailscale.list && \
-    apt-get update && \
-    apt-get install -y tailscale
+RUN curl -fsSL https://ollama.com/install.sh | sh
 
-RUN pip3 install --break-system-packages ollama-herd
+EXPOSE 11434
 
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-ENTRYPOINT ["/start.sh"]
+CMD ["ollama", "serve"]

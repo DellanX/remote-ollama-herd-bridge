@@ -1,103 +1,123 @@
-# Vast Herd Node
+# Vast Ollama Node
 
-A lightweight Docker image that combines **Ollama** and **Ollama Herd Node** to easily add local or cloud GPUs to an existing Ollama Herd cluster.
+A lightweight Docker image that combines the **Vast.ai Base Image** with **Ollama**, providing a GPU-accelerated inference node that can be deployed on Vast.ai, homelabs, or any Docker host with NVIDIA GPU support.
 
-Originally created for **Vast.ai Default Jobs**, this image can run anywhere Docker and GPU acceleration are available.
+This image is designed to work seamlessly with **Vast.ai Default Jobs**, allowing idle GPUs to automatically host Ollama instances that can be connected through SSH tunnels, reverse proxies, VPNs, or other networking solutions.
 
 ---
 
 ## Features
 
 - GPU-accelerated Ollama server
-- Automatic Ollama Herd node startup
-- Explicit router configuration via CLI arguments
-- Environment variable configuration support
-- Automatic mDNS router discovery fallback
-- Startup diagnostics and connectivity testing
-- Designed for Vast.ai Default Jobs, homelabs, and dedicated inference nodes
+- Based on `vastai/base-image`
+- Preserves Vast.ai SSH functionality
+- Compatible with Vast.ai Default Jobs
+- Minimal image footprint
+- Runs Ollama as the primary container process
+- Native Ollama logging and console output
+- Works with local and cloud GPUs
 
 ---
 
 ## Quick Start
 
-### Connect to a Specific Router (CLI Argument)
+### Local Docker
 
 ```bash
 docker run --rm \
   --gpus all \
-  ghcr.io/dellanx/vast-herd-node:latest \
-  --router-url http://192.168.0.79:11435
+  -p 11434:11434 \
+  ghcr.io/dellanx/vast-ollama-node:latest
 ```
 
-### Connect to a Specific Router (Environment Variable)
+Ollama will be available at:
+
+```text
+http://localhost:11434
+```
+
+---
+
+### Pull Models
 
 ```bash
-docker run --rm \
-  --gpus all \
-  -e HERD_ROUTER_URL=http://192.168.0.79:11435 \
-  ghcr.io/dellanx/vast-herd-node:latest
+docker exec -it <container> ollama pull llama3.2
 ```
 
-### Use Automatic mDNS Discovery
+---
+
+### Query Ollama
 
 ```bash
-docker run --rm \
-  --gpus all \
-  ghcr.io/dellanx/vast-herd-node:latest
+curl http://localhost:11434/api/tags
 ```
-
-When no router URL is specified, the container falls back to Ollama Herd's built-in mDNS discovery mechanism.
 
 ---
 
 ## Vast.ai Default Job Example
 
-A common use case is automatically contributing idle GPUs to an Ollama Herd cluster.
+A common use case is automatically exposing idle GPUs for inference workloads.
 
 Example:
 
 ```bash
 vastai set defjob <machine-id> \
-  --image ghcr.io/dellanx/vast-herd-node:latest \
-  --price_gpu 0.01 \
-  --args "--router-url http://192.168.0.79:11435"
+  --image ghcr.io/dellanx/vast-ollama-node:latest \
+  --price_gpu 0.01
 ```
 
 Workflow:
 
 1. GPU becomes idle.
 2. Vast.ai launches the default job.
-3. Ollama starts.
-4. Herd Node joins the cluster.
-5. Inference requests are routed to the idle GPU.
+3. Ollama starts automatically.
+4. The GPU becomes available for inference.
+5. Customers can access the node through:
+   - SSH tunnels
+   - VPNs
+   - Reverse proxies
+   - Direct network exposure
 6. The job is paused automatically when a customer rents the machine.
 7. The job resumes when the machine becomes idle again.
 
 ---
 
-## Supported Configuration
+## SSH Tunnel Example
 
-### CLI Arguments
+A common deployment pattern is exposing the remote Ollama instance through an SSH tunnel.
 
-| Argument | Description |
-|-----------|------------|
-| `--router-url` | Explicit Herd router address |
-
-Example:
+Forward a local port:
 
 ```bash
-docker run ghcr.io/dellanx/vast-herd-node:latest \
-  --router-url http://192.168.0.79:11435
+ssh -N \
+  -L 11434:localhost:11434 \
+  root@<vast-instance>
 ```
+
+You can then use the remote GPU exactly as if Ollama were running locally:
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+---
+
+## Configuration
 
 ### Environment Variables
 
 | Variable | Description | Default |
-|-----------|------------|---------|
-| `HERD_ROUTER_URL` | Explicit Herd router URL | mDNS discovery |
-| `OLLAMA_HOST` | Address Ollama binds to | `0.0.0.0:11434` |
+|----------|-------------|----------|
+| `OLLAMA_HOST` | Listen address | `0.0.0.0:11434` |
 
-CLI arguments take precedence over environment variables.
+Example:
+
+```bash
+docker run \
+  --gpus all \
+  -e OLLAMA_HOST=0.0.0.0:11434 \
+  ghcr.io/dellanx/vast-ollama-node:latest
+```
 
 ---
 
@@ -105,33 +125,30 @@ CLI arguments take precedence over environment variables.
 
 At startup the container:
 
-1. Starts the local Ollama service.
-2. Performs basic startup diagnostics.
-3. Waits for Ollama to become available.
-4. Determines the router URL from:
-   - `--router-url`
-   - `HERD_ROUTER_URL`
-   - mDNS discovery
-5. Launches `herd-node`.
-6. Registers with the Herd router.
-7. Makes local GPU resources available to the cluster.
+1. Initializes the Vast.ai base environment.
+2. Starts Ollama.
+3. Detects available NVIDIA GPUs.
+4. Exposes the Ollama API on port 11434.
+5. Writes standard Ollama logs to the container console.
+
+Because Ollama runs as the foreground process, logs behave exactly as they do in the official `ollama/ollama` image.
 
 ---
 
 ## Diagnostics
 
-Startup logs include information that can help troubleshoot networking and cluster registration:
-
-- Ollama startup status
-- Herd node startup status
-- Router connectivity checks
-- Environment configuration
-- Network diagnostics
-
-To view logs:
+View logs:
 
 ```bash
 docker logs <container>
+```
+
+Example output:
+
+```text
+time=2026-11-19T12:00:00Z level=INFO msg="server config"
+time=2026-11-19T12:00:01Z level=INFO msg="looking for compatible GPUs"
+time=2026-11-19T12:00:02Z level=INFO msg="listening on [::]:11434"
 ```
 
 ---
@@ -140,21 +157,23 @@ docker logs <container>
 
 This image contains:
 
-- No VPN configuration
 - No embedded credentials
 - No authentication tokens
-- No network secrets
+- No VPN software
+- No network configuration
+- No SSH keys
 
-Any networking or authentication requirements should be provided at deployment time.
+Networking and access control should be managed externally.
 
-Common deployment approaches include:
+Common approaches include:
 
+- SSH tunnels
 - Tailscale
 - WireGuard
-- Site-to-site VPNs
+- Reverse proxies
 - Private cloud networking
 
-Never bake sensitive credentials into a public container image.
+Never bake credentials into a public container image.
 
 ---
 
@@ -162,32 +181,31 @@ Never bake sensitive credentials into a public container image.
 
 ### Vast.ai Default Jobs
 
-Automatically contribute idle GPUs to a Herd cluster.
+Automatically host Ollama on idle rented GPUs.
 
-### Homelab GPU Pooling
+### Remote GPU Inference
 
-Aggregate multiple desktop, server, and laptop GPUs into a single Herd deployment.
+Run Ollama on cloud GPUs while keeping clients local.
 
-### Dedicated Inference Workers
+### Homelab GPU Hosting
 
-Run dedicated cloud inference workers that automatically join an existing Herd cluster.
+Make spare desktop or server GPUs available through Ollama.
 
-### Hybrid Clusters
+### Hybrid AI Infrastructure
 
-Combine local GPUs and cloud GPUs behind a single Herd router.
+Combine local and cloud-hosted Ollama instances behind a shared routing layer.
 
 ---
 
 ## Related Projects
 
 - Ollama
-- Ollama Herd
 - Vast.ai
 
 ---
 
 ## License
 
-This project is provided as-is and depends on the upstream Ollama and Ollama Herd projects.
+This project is provided as-is and depends on the upstream Ollama and Vast.ai projects.
 
 Please refer to their respective licenses and documentation for details.
