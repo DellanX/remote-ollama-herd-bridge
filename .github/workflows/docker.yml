@@ -19,15 +19,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log in to GHCR
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
+      #
+      # Router Image
+      #
+
+      - name: Docker Metadata (Router)
+        id: meta-router
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/vast-herd-router
+          tags: |
+            type=raw,value=latest
+            type=ref,event=tag
+
+      - name: Build Router Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.router
+          push: true
+          tags: ${{ steps.meta-router.outputs.tags }}
+          labels: ${{ steps.meta-router.outputs.labels }}
+
+      #
+      # Node Image
+      #
+
+      - name: Docker Metadata (Node)
+        id: meta-node
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/vast-herd-node
@@ -35,10 +61,11 @@ jobs:
             type=raw,value=latest
             type=ref,event=tag
 
-      - name: Build and Push
+      - name: Build Node Image
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-node.outputs.tags }}
+          labels: ${{ steps.meta-node.outputs.labels }}
