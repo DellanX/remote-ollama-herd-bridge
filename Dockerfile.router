@@ -6,11 +6,7 @@ RUN apt-get update && apt-get install -y \
     jq \
     && rm -rf /var/lib/apt/lists/*
 
-COPY . /app
-
-WORKDIR /app
-
-RUN pip install .
+RUN pip install \
+    remote-ollama-herd-bridge
 
 ENTRYPOINT ["rohb"]
-CMD ["run"]
