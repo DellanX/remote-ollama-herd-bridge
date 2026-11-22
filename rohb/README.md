@@ -1,8 +1,8 @@
-# VOHB
+# ROHB
 
-**Virtual Ollama Herd Bridge**
+**Remote Ollama Herd Bridge**
 
-VOHB is a lightweight bridge between **Vast.ai** and **Ollama Herd**.
+ROHB is a lightweight bridge between **Vast.ai** and **Ollama Herd**.
 
 It discovers Vast.ai instances, establishes secure SSH tunnels to remote Ollama nodes, waits for connectivity, and then launches `herd-node` using the tunneled endpoint.
 
@@ -30,14 +30,14 @@ The goal is to allow cloud-hosted Ollama instances to participate in a local Oll
 ### Using uv
 
 ```bash
-uv add vohb
+uv add remote-ollama-herd-bridge
 ```
 
 ### Development
 
 ```bash
-git clone <repository>
-cd vohb
+git clone https://github.com/DellanX/remote-ollama-herd-bridge.git
+cd rohb
 
 uv sync
 ```
@@ -45,14 +45,14 @@ uv sync
 Run the CLI:
 
 ```bash
-uv run vohb run
+uv run rohb run
 ```
 
 ---
 
 ## Concepts
 
-VOHB manages three stages:
+ROHB manages three stages:
 
 ```text
 identify
@@ -102,7 +102,7 @@ Launches `herd-node` using the local side of the tunnel.
 Default Command:
 
 ```bash
-vohb run
+rohb run
 ```
 
 Startup flow:
@@ -124,7 +124,7 @@ herd-node
 Discover the target instance.
 
 ```bash
-vohb identify
+rohb identify
 ```
 
 Example output:
@@ -146,13 +146,13 @@ Example output:
 Create and validate an SSH tunnel.
 
 ```bash
-vohb tunnel
+rohb tunnel
 ```
 
 Or manually specify a target:
 
 ```bash
-vohb tunnel \
+rohb tunnel \
   --host 1.2.3.4 \
   --port 40222
 ```
@@ -164,7 +164,7 @@ vohb tunnel \
 Launch Herd directly.
 
 ```bash
-vohb herd
+rohb herd
 ```
 
 Useful for testing an existing tunnel.
@@ -217,21 +217,21 @@ Useful for testing an existing tunnel.
 ### Connect to a Specific Vast.ai Instance
 
 ```bash
-vohb run \
+rohb run \
   --instance-id 12345678
 ```
 
 ### Connect by Label
 
 ```bash
-vohb run \
+rohb run \
   --instance-label inference
 ```
 
 ### Skip Discovery Completely
 
 ```bash
-vohb run \
+rohb run \
   --host 1.2.3.4 \
   --port 40222
 ```
@@ -239,14 +239,14 @@ vohb run \
 ### Use a Specific SSH Identity
 
 ```bash
-vohb run \
+rohb run \
   --ssh-identity-file ~/.ssh/id_ed25519
 ```
 
 ### Custom Tunnel Port
 
 ```bash
-vohb run \
+rohb run \
   --local-port 11435
 ```
 
@@ -263,7 +263,7 @@ vohb run \
        |
        |
 +------+------+
-| VOHB         |
+| ROHB         |
 | SSH Tunnel   |
 +------+------+
        |
@@ -279,7 +279,7 @@ vohb run \
 
 ## Security
 
-VOHB does not store credentials.
+ROHB does not store credentials.
 
 Recommended authentication:
 

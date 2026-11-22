@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 import urllib.request
 
-from vohb.models import TunnelConfig
+from rohb.models import TunnelConfig
 
 def prepare_private_key() -> Optional[str]:
     """
@@ -25,7 +25,7 @@ def prepare_private_key() -> Optional[str]:
     ssh_dir = Path("/root/.ssh")
     ssh_dir.mkdir(parents=True, exist_ok=True)
 
-    key_file = ssh_dir / "id_vhb"
+    key_file = ssh_dir / "id_rohb"
 
     key_file.write_text(private_key)
     key_file.chmod(0o600)

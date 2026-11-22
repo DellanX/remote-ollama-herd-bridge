@@ -1,0 +1,28 @@
+[project]
+name = "remote-ollama-herd-bridge"
+description = "Bridge remote Ollama nodes into a local Ollama Herd deployment"
+dynamic=["version"]
+readme = "README.md"
+authors = [
+    { name = "Dyllan Macias", email = "Dyllan.Macias@Cataclysma.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "ollama-herd>=0.12.12",
+    "vastai>=1.11.2",
+]
+
+[project.scripts]
+rohb = "rohb.cli:main"
+
+
+[build-system]
+requires = [
+    "setuptools>=75",
+    "setuptools-scm[simple]>=8"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"

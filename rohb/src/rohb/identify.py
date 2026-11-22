@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from vastai import VastAI
 
-from vohb.models import InstanceInfo, IdentifyConfig
+from rohb.models import InstanceInfo, IdentifyConfig
 
 def _instance_host(instance: dict) -> str:
     return (

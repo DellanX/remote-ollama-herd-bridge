@@ -1917,6 +1917,21 @@ wheels = [
 ]
 
 [[package]]
+name = "rohb"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "ollama-herd" },
+    { name = "vastai" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ollama-herd", specifier = ">=0.12.12" },
+    { name = "vastai", specifier = ">=1.11.2" },
+]
+
+[[package]]
 name = "setuptools"
 version = "84.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2163,21 +2178,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6d/ed/e516129ce985f90c0107715c816725858ff1205302920927440085698704/vastai-1.11.2.tar.gz", hash = "sha256:311c10655805766be76552426ceee0f6b30e79159d18f0e247f63a707621613b", size = 284608, upload-time = "2026-11-19T19:54:40.204Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/8d/fc854d1fc90c978581993fd1d70f132722d331b8dc57694aa9b2641f401f/vastai-1.11.2-py3-none-any.whl", hash = "sha256:e74947fdeec8e8422708f4bf7d81284a6ef74788bf99ebef18179a36c2017b7c", size = 325930, upload-time = "2026-11-19T19:54:41.426Z" },
-]
-
-[[package]]
-name = "vohb"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "ollama-herd" },
-    { name = "vastai" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "ollama-herd", specifier = ">=0.12.12" },
-    { name = "vastai", specifier = ">=1.11.2" },
 ]
 
 [[package]]
