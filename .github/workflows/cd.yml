@@ -16,6 +16,9 @@ jobs:
   build-node-image:
     runs-on: ubuntu-latest
 
+    environment:
+      name: pypi
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
