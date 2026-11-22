@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import json
 import os
+from dataclasses import dataclass
 
-from vhb.models import InstanceInfo
 from vastai import VastAI
 
+from vhb.models import InstanceInfo, IdentifyConfig
 
 def _instance_host(instance: dict) -> str:
     return (
@@ -15,7 +15,9 @@ def _instance_host(instance: dict) -> str:
     )
 
 
-def _instance_port(instance: dict) -> int | None:
+def _instance_port(
+    instance: dict,
+) -> int | None:
     return (
         instance.get("ssh_port")
         or instance.get("ports", {})
@@ -25,28 +27,25 @@ def _instance_port(instance: dict) -> int | None:
     )
 
 
-def identify() -> InstanceInfo:
-    """
-    Discovery order:
+def identify(
+    config: IdentifyConfig | None = None,
+) -> InstanceInfo:
 
-    1. VASTAI_HOST + VASTAI_PORT
-    2. VASTAI_INSTANCE_ID
-    3. VASTAI_INSTANCE_LABEL
-    4. First running instance
-    """
+    config = (
+        config
+        if config is not None
+        else IdentifyConfig.from_env()
+    )
 
     #
     # Manual override
     #
 
-    host = os.getenv("VASTAI_HOST")
-    port = os.getenv("VASTAI_PORT")
-
-    if host and port:
+    if config.host and config.port:
         return InstanceInfo(
             id=-1,
-            host=host,
-            port=int(port) if port else None,
+            host=config.host,
+            port=config.port,
             label="manual",
             status="manual",
         )
@@ -55,30 +54,39 @@ def identify() -> InstanceInfo:
     # API configuration
     #
 
-    api_key = os.getenv("VASTAI_API_KEY")
-
-    if not api_key:
+    if not config.api_key:
         raise RuntimeError(
             "VASTAI_API_KEY is required."
         )
 
-    vast = VastAI(api_key=api_key)
+    vast = VastAI(
+        api_key=config.api_key
+    )
 
     #
     # Instance ID mode
     #
 
-    instance_id = os.getenv("VASTAI_INSTANCE_ID")
+    if config.instance_id is not None:
 
-    if instance_id:
-        instance = vast.show_instance(int(instance_id))
+        instance = vast.show_instance(
+            config.instance_id
+        )
 
         return InstanceInfo(
             id=instance["id"],
-            host=_instance_host(instance),
-            port=int(_instance_port(instance) if instance else None),
-            label=instance.get("label"),
-            status=instance.get("actual_status"),
+            host=_instance_host(
+                instance
+            ),
+            port=_instance_port(
+                instance
+            ),
+            label=instance.get(
+                "label"
+            ),
+            status=instance.get(
+                "actual_status"
+            ),
         )
 
     #
@@ -88,48 +96,51 @@ def identify() -> InstanceInfo:
     instances = vast.show_instances()
 
     running = [
-        i
-        for i in instances
-        if i.get("actual_status") == "running"
+        instance
+        for instance in instances
+        if instance.get(
+            "actual_status"
+        ) == "running"
     ]
 
     #
     # Label mode
     #
 
-    label = os.getenv("VASTAI_INSTANCE_LABEL")
+    if config.instance_label:
 
-    if label:
         matches = [
-            i
-            for i in running
-            if i.get("label") == label
+            instance
+            for instance in running
+            if instance.get("label")
+            == config.instance_label
         ]
 
         matches.sort(
             key=lambda x: x["id"]
         )
 
-        index = int(
-            os.getenv(
-                "VASTAI_INSTANCE_INDEX",
-                "0",
-            )
-        )
-
-        if index >= len(matches):
+        if (
+            config.instance_index
+            >= len(matches)
+        ):
             raise RuntimeError(
                 f"No instance found for label "
-                f"'{label}' at index {index}"
+                f"'{config.instance_label}' "
+                f"at index "
+                f"{config.instance_index}"
             )
 
-        instance = matches[index]
+        instance = matches[
+            config.instance_index
+        ]
 
     #
     # Automatic discovery
     #
 
     else:
+
         if not running:
             raise RuntimeError(
                 "No running Vast.ai instances found."
@@ -141,15 +152,18 @@ def identify() -> InstanceInfo:
 
         instance = running[0]
 
-    json.dump(
-        instance,
-        open("instance.json", "w"),
-        indent=2,
-    )
     return InstanceInfo(
         id=instance["id"],
-        host=_instance_host(instance),
-        port=_instance_port(instance),
-        label=instance.get("label"),
-        status=instance.get("actual_status"),
+        host=_instance_host(
+            instance
+        ),
+        port=_instance_port(
+            instance
+        ),
+        label=instance.get(
+            "label"
+        ),
+        status=instance.get(
+            "actual_status"
+        ),
     )

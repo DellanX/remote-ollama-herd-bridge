@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 import urllib.request
 
-
+from vhb.models import TunnelConfig
 
 def prepare_private_key() -> Optional[str]:
     """
@@ -36,19 +36,19 @@ def prepare_private_key() -> Optional[str]:
 def build_ssh_command(
     host: str,
     port: int,
+    config: TunnelConfig,
 ) -> list[str]:
     """
     Construct SSH tunnel command.
     """
 
-    ssh_user = os.getenv(
-        "SSH_USER",
-        "root",
-    )
+    config = config if config is not None else TunnelConfig.from_env()
+
+    ssh_user = config.ssh_user
 
     identity_file = (
         prepare_private_key()
-        or os.getenv("SSH_IDENTITY_FILE")
+        or config.ssh_identity_file
     )
 
     cmd = [
@@ -61,7 +61,7 @@ def build_ssh_command(
         "UserKnownHostsFile=/dev/null",
         "-N",
         "-L",
-        "0.0.0.0:11434:localhost:11434",
+        f"{config.local_host}:{config.local_port}:{config.remote_host}:{config.remote_port}",
         "-p",
         str(port),
     ]
@@ -82,6 +82,7 @@ def build_ssh_command(
 def start_tunnel(
     host: str,
     port: int,
+    config: TunnelConfig | None = None,
 ) -> subprocess.Popen:
     """
     Start the SSH tunnel.
@@ -90,10 +91,7 @@ def start_tunnel(
         subprocess.Popen
     """
 
-    cmd = build_ssh_command(
-        host,
-        port,
-    )
+    cmd = build_ssh_command(host, port, config)
 
     print(
         f"Starting SSH tunnel to "
@@ -109,25 +107,12 @@ def start_tunnel(
 
 def wait_for_tunnel(
     process: subprocess.Popen,
+    config: TunnelConfig | None = None,
 ) -> None:
-
-    max_retries = int(
-        os.getenv(
-            "WAIT_MAX_RETRIES",
-            "30",
-        )
-    )
-
-    interval = float(
-        os.getenv(
-            "WAIT_INTERVAL",
-            "2",
-        )
-    )
-
+    config = config if config is not None else TunnelConfig.from_env()
     for attempt in range(
         1,
-        max_retries + 1,
+        config.wait_max_retries + 1,
     ):
         if process.poll() is not None:
             raise RuntimeError(
@@ -149,10 +134,10 @@ def wait_for_tunnel(
 
         print(
             f"Waiting for tunnel "
-            f"({attempt}/{max_retries})"
+            f"({attempt}/{config.wait_max_retries})"
         )
 
-        time.sleep(interval)
+        time.sleep(config.wait_interval)
 
     raise RuntimeError(
         "Tunnel never became available."
