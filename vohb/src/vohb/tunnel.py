@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 import urllib.request
 
-from vhb.models import TunnelConfig
+from vohb.models import TunnelConfig
 
 def prepare_private_key() -> Optional[str]:
     """

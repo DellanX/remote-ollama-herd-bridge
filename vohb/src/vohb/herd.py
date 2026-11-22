@@ -1,6 +1,6 @@
 from fleet_manager.cli.node_cli import start as start_herd_node
 
-from vhb.models import HerdConfig
+from vohb.models import HerdConfig
 
 def start_herd(
     ollama_host: str,

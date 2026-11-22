@@ -2,15 +2,15 @@ import argparse
 import json
 from dataclasses import asdict
 
-from vhb.models import HerdConfig, IdentifyConfig, RunConfig, TunnelConfig
+from vohb.models import HerdConfig, IdentifyConfig, RunConfig, TunnelConfig
 
-from vhb.identify import identify
-from vhb.tunnel import start_tunnel, wait_for_tunnel
-from vhb.herd import start_herd
+from vohb.identify import identify
+from vohb.tunnel import start_tunnel, wait_for_tunnel
+from vohb.herd import start_herd
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="vhb-cli",
+        prog="vohb",
         description="Vast Herd Bridge CLI",
     )
 

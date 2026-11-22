@@ -1,7 +1,7 @@
 [project]
-name = "vhb"
+name = "vohb"
 version = "0.1.0"
-description = "VastAI Ollama Herd Worker Bridge"
+description = "Virtual Ollama Herd Bridge"
 readme = "README.md"
 authors = [
     { name = "Dyllan Macias", email = "Dyllan.Macias@Cataclysma.com" }
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-vhb = "vhb.cli:main"
+vohb = "vohb.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.13.9,<0.14.0"]

@@ -2166,7 +2166,7 @@ wheels = [
 ]
 
 [[package]]
-name = "vhb"
+name = "vohb"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
