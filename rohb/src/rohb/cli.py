@@ -5,7 +5,7 @@ from dataclasses import asdict
 from rohb.models import HerdConfig, IdentifyConfig, RunConfig, TunnelConfig
 
 from rohb.identify import identify
-from rohb.tunnel import start_tunnel, wait_for_tunnel
+from rohb.tunnel import start_tunnel
 from rohb.herd import start_herd
 
 def main() -> None:
@@ -109,16 +109,13 @@ def main() -> None:
 
         print(process.pid)
 
-        wait_for_tunnel(process)
-
-        ollama_host = (
+        herd_config.ollama_host = herd_config.ollama_host or (
             f"http://"
             f"{tunnel_config.local_host}:"
             f"{tunnel_config.local_port}"
         )
         
         start_herd(
-            ollama_host=ollama_host,
             config=herd_config,
         )
 
@@ -213,6 +210,10 @@ def add_herd_args(
 
     parser.add_argument(
         "--log-level"
+    )
+
+    parser.add_argument(
+        "--ollama-host"
     )
 
 def identify_config_from_args(
@@ -319,6 +320,9 @@ def herd_config_from_args(
 
     if args.log_level is not None:
         config.log_level = args.log_level
+
+    if args.ollama_host is not None:
+        config.ollama_host = args.ollama_host
 
     return config
 

@@ -31,6 +31,8 @@ class IdentifyConfig:
     instance_label: str | None = None
     instance_index: int = 0
 
+    ollama_url: str | None = None
+
     @classmethod
     def from_env(cls) -> "IdentifyConfig":
         instance_id = os.getenv("VASTAI_INSTANCE_ID")
@@ -120,6 +122,7 @@ class TunnelConfig:
 
 @dataclass
 class HerdConfig:
+    ollama_host: str | None = None
     node_id: str | None = None
     router_url: str | None = None
     learn_capacity: bool = False
