@@ -1,5 +1,5 @@
-ARG PACKAGE_VERSION
 FROM python:3.12-slim
+ARG PACKAGE_VERSION
 
 RUN apt-get update && apt-get install -y \
     openssh-client \
@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y \
     jq \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install \
-    remote-ollama-herd-bridge==${PACKAGE_VERSION#v}
+RUN pip install "remote-ollama-herd-bridge==${PACKAGE_VERSION}"
 
 ENTRYPOINT ["rohb"]

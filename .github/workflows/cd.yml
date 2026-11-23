@@ -100,7 +100,19 @@ jobs:
           tags: |
             type=raw,value=latest
             type=ref,event=tag
+      - name: Extract version
+        id: version
+        run: |
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - name: Wait for PyPI
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
 
+          until pip index versions remote-ollama-herd-bridge | grep -q "$VERSION"
+          do
+            echo "Waiting for PyPI version $VERSION..."
+            sleep 10
+          done
       - name: Build and Push Bridge Image
         uses: docker/build-push-action@v6
         with:
@@ -110,4 +122,4 @@ jobs:
           tags: ${{ steps.meta-bridge.outputs.tags }}
           labels: ${{ steps.meta-bridge.outputs.labels }}
           build-args: |
-            PACKAGE_VERSION=${{ github.ref_name }}
+            PACKAGE_VERSION=${{ steps.version.outputs.version }}
