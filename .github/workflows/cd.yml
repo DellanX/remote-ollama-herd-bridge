@@ -109,3 +109,5 @@ jobs:
           push: true
           tags: ${{ steps.meta-bridge.outputs.tags }}
           labels: ${{ steps.meta-bridge.outputs.labels }}
+          build-args: |
+            PACKAGE_VERSION=${{ github.ref_name }}
