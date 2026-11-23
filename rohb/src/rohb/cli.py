@@ -73,8 +73,6 @@ def main() -> None:
 
         print(process.pid)
 
-        wait_for_tunnel(process)
-
     elif args.command == "herd":
         tunnel_config = tunnel_config_from_args(args)
         herd_config = herd_config_from_args(args)

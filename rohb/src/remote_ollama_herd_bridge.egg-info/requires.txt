@@ -1,2 +1,0 @@
-ollama-herd>=0.12.12
-vastai>=1.11.2

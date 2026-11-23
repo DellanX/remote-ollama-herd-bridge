@@ -120,8 +120,9 @@ def wait_for_tunnel(
             )
 
         try:
+            
             with urllib.request.urlopen(
-                "http://127.0.0.1:11434/api/tags",
+                f"http://localhost:{config.local_port}/api/tags",
                 timeout=2,
             ):
                 print(
